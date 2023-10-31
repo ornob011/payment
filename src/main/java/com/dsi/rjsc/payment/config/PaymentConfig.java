@@ -1,8 +1,10 @@
 package com.dsi.rjsc.payment.config;
 
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+@Getter
 @Configuration
 public class PaymentConfig {
 
@@ -42,51 +44,4 @@ public class PaymentConfig {
     @Value("${payment.passWord}")
     private String passWord;
 
-    public String getServiceUrlToken() {
-        return serviceUrlToken;
-    }
-
-    public String getPostDataToken() {
-        return postDataToken;
-    }
-
-    public String getServiceUrlEcomm() {
-        return serviceUrlEcomm;
-    }
-
-    public String getMerchantId() {
-        return merchantId;
-    }
-
-    public String getAmount() {
-        return amount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getApproveUrl() {
-        return approveUrl;
-    }
-
-    public String getCancelUrl() {
-        return cancelUrl;
-    }
-
-    public String getDeclineUrl() {
-        return declineUrl;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public String getPassWord() {
-        return passWord;
-    }
 }
