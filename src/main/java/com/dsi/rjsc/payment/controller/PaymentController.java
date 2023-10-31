@@ -1,25 +1,22 @@
 package com.dsi.rjsc.payment.controller;
 
+import com.dsi.rjsc.payment.dto.PaymentDTO;
 import com.dsi.rjsc.payment.service.PaymentRequestService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import java.util.Map;
-import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Map;
 
 @Controller
 public class PaymentController {
 
     @Autowired
     private PaymentRequestService paymentRequestService;
-
-    @Value("${pkcs12.base64}")
-    private String pkcs12Base64;
-
-    @Value("${pkcs12.password}")
-    private String pkcs12Password;
 
     @Value("${service.url.token}")
     private String serviceUrlToken;
@@ -30,19 +27,66 @@ public class PaymentController {
     @Value("${service.url.ecomm}")
     private String serviceUrlEcomm;
 
+    @Value("${payment.merchantId}")
+    private String merchantId;
+
+    @Value("${payment.amount}")
+    private String amount;
+
+    @Value("${payment.currency}")
+    private String currency;
+
+    @Value("${payment.description}")
+    private String description;
+
+    @Value("${payment.approveUrl}")
+    private String approveUrl;
+
+    @Value("${payment.cancelUrl}")
+    private String cancelUrl;
+
+    @Value("${payment.declineUrl}")
+    private String declineUrl;
+
+    @Value("${payment.userName}")
+    private String userName;
+
+    @Value("${payment.passWord}")
+    private String passWord;
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @GetMapping("/")
     public String index(Model model) {
-        Map<String, Object> tokenData = paymentRequestService.processRequest(postDataToken, serviceUrlToken);
-        String transactionId = (String) tokenData.get("transactionId");
+        try {
+            Map<String, Object> tokenData = paymentRequestService.processRequest(postDataToken, serviceUrlToken);
+            if (tokenData == null) {
+                logger.error(":: ERROR:: Token data is null");
+                return "redirect:/errorPage";
+            }
 
-        String postDataEcomm = String.format("{\"merchantId\": \"11122333\", \"amount\": \"100\", \"currency\": \"050\", \"description\": \"Reference_Number\", \"approveUrl\": \"http://localhost:8080/CityBankPHP_1.0.1/Approved.php\", \"cancelUrl\": \"http://localhost:8080/CityBankPHP_1.0.1/Cancelled.php\", \"declineUrl\": \"http://localhost:8080/CityBankPHP_1.0.1/Declined.php\", \"userName\": \"test\", \"passWord\": \"123456Aa\", \"secureToken\": \"%s\"}", transactionId);
-        Map<String, Object> ecommData = paymentRequestService.processRequest(postDataEcomm, serviceUrlEcomm);
+            String transactionId = (String) tokenData.get("transactionId");
+            PaymentDTO paymentDTO = new PaymentDTO(merchantId, amount, currency, description, approveUrl, cancelUrl, declineUrl, userName, passWord, transactionId);
+            String postDataEcomm = paymentDTO.toJSON();
 
-        Map<String, Object> items = (Map<String, Object>) ecommData.get("items");
-        String redirectUrl = items.get("url") + "?ORDERID=" + items.get("orderId") + "&SESSIONID=" + items.get("sessionId");
+            Map<String, Object> ecommData = paymentRequestService.processRequest(postDataEcomm, serviceUrlEcomm);
+            if (ecommData == null) {
+                logger.error(":: ERROR:: Ecomm data is null");
+                return "redirect:/errorPage";
+            }
 
-        model.addAttribute("redirectUrl", redirectUrl);
-
-        return "redirect";
+            Map<String, Object> items = (Map<String, Object>) ecommData.get("items");
+            if (items != null) {
+                String redirectUrl = items.get("url") + "?ORDERID=" + items.get("orderId") + "&SESSIONID=" + items.get("sessionId");
+                model.addAttribute("redirectUrl", redirectUrl);
+                return "redirect";
+            } else {
+                logger.error(":: ERROR:: Items map is null");
+                return "redirect:/errorPage";
+            }
+        } catch (Exception ex) {
+            logger.error(":: ERROR:: Exception occurred :: ", ex);
+            return "redirect:/errorPage";
+        }
     }
 }
