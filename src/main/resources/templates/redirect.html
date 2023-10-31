@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecting...</title>
+</head>
+<body>
+<form id="PostForm" name="PostForm" th:action="${redirectUrl}" method="post">
+</form>
+<script type="text/javascript">
+  var vPostForm = document.PostForm;
+  vPostForm.submit();
+</script>
+</body>
+</html>
